@@ -1,6 +1,6 @@
-= Shinken POC=
+#Shinken POC
 
-== prereq ==
+## prereq 
     $ vagrant plugin list
     ansible (0.2.2)
     vagrant-share (1.1.5, system)
@@ -17,7 +17,7 @@
       LogLevel FATAL
       ForwardAgent yes
 
-== Creation du noeud central ==
+##Creation du noeud central 
     # vagrant up central --provision
     # ansible all -i central, -m setup
     central | SUCCESS => {
@@ -63,7 +63,6 @@
         }, 
         "changed": false
     }
-
-== Connexion ==
+## Connexion 
     $ vagrant ssh central
     [vagrant@central ~]$ sudo -i
