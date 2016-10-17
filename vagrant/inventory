@@ -1,0 +1,13 @@
+[central]
+central
+
+[pollers]
+poller1
+
+[mongos]
+mongo1
+
+
+[influx]
+influxdb
+

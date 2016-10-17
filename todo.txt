@@ -1,0 +1,36 @@
+install
+yum install python python-pycurl python-setuptools epel-release
+yum install python-pip
+adduser shinken
+
+yum install shinken shinken-arbiter shinken-broker shinken-reactionner shinken-poller shinken-scheduler shinken-receiver nagios-plugins
+yum install python-crypto #necessaire pour installer les modules via "shinken install"
+yum install mongodb mongodb-server #necessaire pour plusieurs modules dont la WebUI
+yum install httpd-tools #utile pour une authentification simple et rapide de la WebUI
+
+
+systemctl enable shinken
+for i in arbiter poller reactionner scheduler broker receiver; do
+  systemctl enable shinken-$i.service;
+done
+
+shinken --init
+install -d -o nagios -g nagios -m 755 /var/lib/shinken/doc
+
+# webui
+pip install -r https://raw.githubusercontent.com/shinken-monitoring/mod-webui/develop/requirements.txt
+
+shinken install webui2
+htpasswd -c /etc/shinken/htpasswd.users admin
+
+shinken install auth-active-directory # LDAP
+
+# module
+shinken install simple-log
+
+# MONGO
+systemctl enable mongod
+systemctl start mongod
+
+# broker https://shinken.readthedocs.io/en/latest/08_configobjects/broker.html
+vi /etc/shinken/brokers/broker-master.cfg

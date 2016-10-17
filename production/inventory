@@ -1,0 +1,13 @@
+[central]
+scasrvshinken01p ansible_host=172.17.20.143
+
+[pollers]
+scasrvshinkenpoller01p ansible_host=172.17.20.173
+
+[mongos]
+scasrvshinkenmongo01p ansible_host=172.17.20.174
+
+
+[influx]
+scasrvshinkeninflux01p ansible_host=172.17.20.158
+

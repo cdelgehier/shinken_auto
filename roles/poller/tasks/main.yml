@@ -1,0 +1,71 @@
+---
+- name: Install stuff
+  yum:
+    name: '{{ item }}'
+    state: present
+  with_items:
+    - python
+    - python-pycurl
+    - python-setuptools
+    # - python-crypto
+    # pour mongo
+    # - python-pymongo
+    # - python-pymongo-gridfs
+    # shinken
+    - shinken
+    # - shinken-arbiter
+    - shinken-poller
+    - shinken-scheduler
+    # - shinken-broker
+    # - shinken-reactionner
+    - shinken-receiver
+
+- name: Enable Poller
+  service:
+    name: shinken-'{{ item }}'
+    state: started
+    enabled: yes
+  with_items:
+    - scheduler
+    - poller
+    - receiver
+
+# - name: Create poller configuration
+#   template:
+#     src: ../../central/templates/poller.cfg.j2
+#     dest: '/etc/shinken/pollers/{{ item }}.cfg'
+#     # owner: shinken
+#     # group: shinken
+#     mode: 0644
+#   #notify: restart_shinken
+#   with_items:
+#     - '{{ inventory_hostname_short }}'
+
+# - name: Create receiver configuration
+#   template:
+#     src: ../../central/templates/receiver.cfg.j2
+#     dest: '/etc/shinken/receivers/{{ item }}.cfg'
+#     # owner: shinken
+#     # group: shinken
+#     mode: 0644
+#   #notify: restart_shinken
+#   with_items:
+#     - '{{ inventory_hostname_short }}'
+
+# - name: Create scheduler configuration
+#   template:
+#     src: ../../central/templates/receiver.cfg.j2
+#     dest: '/etc/shinken/schedulers/{{ item }}.cfg'
+#     # owner: shinken
+#     # group: shinken
+#     mode: 0644
+#   #notify: restart_shinken
+#   with_items:
+#     - '{{ inventory_hostname_short }}'
+
+- name: "Restart poller's services"
+  service: name='shinken-{{ item }}' state=started enabled=yes
+  with_items:
+    - scheduler
+    - poller
+    - receiver

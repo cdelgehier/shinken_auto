@@ -1,0 +1,59 @@
+---
+# - name: Stop firewalld
+#   service: name=firewalld enabled=no state=stopped
+#   ignore_errors: yes
+#
+# - name: Disable SELinux
+#   selinux: state=disabled
+#   ignore_errors: yes
+#
+# - name: Upgrade system
+#   yum: name=* state=latest
+#
+# - name: Installation epel repo
+#   yum:
+#     name: epel-release
+#     enablerepo: extras
+#     state: present
+
+- name: Ensure InfluxDB repo file
+  yum_repository:
+    name:        influxdb
+    description: InfluxDB Repository - RHEL $releasever
+    baseurl:     https://repos.influxdata.com/rhel/$releasever/$basearch/stable
+    enabled:     yes
+    gpgcheck:    yes
+    gpgkey:      https://repos.influxdata.com/influxdb.key
+
+- name: Installation influxDB
+  yum:
+    name: '{{ item }}'
+    enablerepo: influxdb
+    update_cache: yes
+    state: present
+  with_items:
+    - influxdb
+
+- name: Ensure InfluxDB data base dir is exists.
+  file:
+    path: '{{ influxdb_base_dir }}'
+    state: directory
+    owner: influxdb
+    group: influxdb
+    mode: 0755
+
+- name: Ensure influxdb service is started and enabled at boot.
+  service:
+    name: influxdb
+    state: started
+    enabled: yes
+
+- name: Copy InfluxDB configure file.
+  template:
+    src: influxdb.conf.j2
+    dest: /etc/influxdb/influxdb.conf
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  notify: restart influxdb

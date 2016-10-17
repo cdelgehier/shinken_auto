@@ -1,0 +1,17 @@
+---
+shinken_module_webui2_dependencies:
+  pymongo:
+    version: 3.2
+  requests:
+    version: 2.8.1
+  arrow:
+    version: 0.7.0
+  bottle:
+    version: 0.12.8
+  passlib:
+    version: 1.6.5
+
+webui2_external_modules:
+  - auth-cfg-password
+
+auth_cookie_secret: Change_moi_gros!

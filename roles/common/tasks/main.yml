@@ -1,0 +1,23 @@
+---
+- name: Stop firewalld
+  service: name=firewalld enabled=no state=stopped
+  ignore_errors: yes
+
+- name: Disable SELinux
+  selinux: state=disabled
+  ignore_errors: yes
+
+- name: Upgrade system
+  yum: name=* state=latest
+
+- name: Installation epel repo
+  yum:
+    name: epel-release
+    enablerepo: extras
+    state: present
+
+- name: Install pip
+  yum: 
+    name:  python-pip
+    state: present
+

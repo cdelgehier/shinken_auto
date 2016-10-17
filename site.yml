@@ -1,0 +1,31 @@
+---
+- hosts: all
+  become: yes
+  roles:
+    - role: common
+
+- hosts: central
+  become: yes
+  roles:
+    - role: central
+
+- hosts: pollers
+  become: yes
+  roles:
+    - role: poller
+
+- hosts: mongos
+  become: yes
+  roles:
+    - role: mongo
+
+- hosts: influx
+  become: yes
+  roles:
+    - role: influx
+
+- hosts: central
+  become: yes
+  tasks:
+    - name: restart arbiter service
+      service: name=shinken-arbiter state=started enabled=yes

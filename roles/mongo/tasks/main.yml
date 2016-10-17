@@ -1,0 +1,40 @@
+---
+# - name: Stop firewalld
+#   service: name=firewalld enabled=no state=stopped
+#   ignore_errors: yes
+#
+# - name: Disable SELinux
+#   selinux: state=disabled
+#   ignore_errors: yes
+#
+# - name: Upgrade system
+#   yum: name=* state=latest
+#
+# - name: Installation epel repo
+#   yum:
+#     name: epel-release
+#     enablerepo: extras
+#     state: present
+
+- name: Get mongoDB key
+  rpm_key:
+    key: '{{ mongo_key_url }}'
+    state: present
+
+- name: Add repo mongoDB
+  yum_repository:
+    name:        "mongodb-org-3.2"
+    description: "MongoDB Repository"
+    baseurl:     "https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/3.2/x86_64/"
+    enabled:     yes
+    gpgcheck:    yes
+    gpgkey:      '{{ mongo_key_url }}'
+
+- name: install mongodb
+  yum: name={{item}} state=present
+  with_items:
+    - mongodb-org
+    - mongodb-org-server
+    - mongodb-org-shell
+    - mongodb-org-mongos
+    - mongodb-org-tools

@@ -1,0 +1,160 @@
+---
+# - name: Create group shinken
+#   group:
+#     name: shinken
+#     state: present
+#
+# - name: Add user shinken
+#   user:
+#     name: shinken
+#     shell: /bin/bash
+#     groups: shinken
+#     append: yes
+
+- name: Install stuff
+  yum:
+    name: '{{ item }}'
+    state: present
+  with_items:
+    - python
+    - python-pycurl
+    - python-setuptools
+    - python-crypto
+    # pour mongo
+    - python-pymongo
+    - python-pymongo-gridfs
+    # shinken
+    - shinken
+    - shinken-arbiter
+    # - shinken-poller
+    # - shinken-scheduler
+    - shinken-broker
+    - shinken-reactionner
+    # - shinken-receiver
+
+- name: Create shinken doc directory
+  file: path=/var/lib/shinken/doc state=directory
+# - name : Correct right on shinken folders
+#   file: dest="{{ item }}" owner=shinken group=shinken recurse=yes
+#   with_items:
+#     - /etc/shinken
+#     - /var/lib/shinken
+#     - /var/log/shinken
+#     - /var/run/shinken
+
+
+- name: Initialize Shinken
+  command: shinken --init
+  # become: yes
+  # become_user: shinken
+  #become_method: sudo
+  args:
+    creates: /root/.shinken.ini
+
+- name: Create host configurations
+  template:
+    src: host.cfg.j2
+    dest: /etc/shinken/hosts/{{ item.host_name }}.cfg
+    # owner: shinken
+    # group: shinken
+    mode: 0644
+  #notify: reload shinken
+  with_items:
+    - { use: 'linux-server', contact_groups : 'admins', host_name: '{{ inventory_hostname_short }}', alias: '{{ inventory_hostname_short }}', address: '{{ ansible_default_ipv4["address"] }}', check_interval: 1, icon_set: server  }
+
+- name: Create shinken configuration
+  template:
+    src: shinken.cfg.j2
+    dest: /etc/shinken/shinken.cfg
+    # owner: shinken
+    # group: shinken
+    mode: 0644
+
+
+- name: Create broker-master configuration
+  template:
+    src: broker-master.cfg.j2
+    dest: /etc/shinken/brokers/broker-master.cfg
+    # owner: shinken
+    # group: shinken
+    mode: 0644
+  #notify: restart_shinken
+  with_items:
+    - '{{ groups["central"] | first }}'
+
+- name: Create poller configuration
+  template:
+    src: poller.cfg.j2
+    dest: '/etc/shinken/pollers/{{ item }}.cfg'
+    # owner: shinken
+    # group: shinken
+    mode: 0644
+  #notify: restart_shinken
+  with_items:
+    - '{{ groups["pollers"] }}'
+
+- name: Create receiver configuration
+  template:
+    src: receiver.cfg.j2
+    dest: '/etc/shinken/receivers/{{ item }}.cfg'
+    # owner: shinken
+    # group: shinken
+    mode: 0644
+  #notify: restart_shinken
+  with_items:
+    - '{{ groups["pollers"] }}'
+
+- name: Create scheduler configuration
+  template:
+    src: scheduler.cfg.j2
+    dest: '/etc/shinken/schedulers/{{ item }}.cfg'
+    # owner: shinken
+    # group: shinken
+    mode: 0644
+  #notify: restart_shinken
+  with_items:
+    - '{{ groups["pollers"] }}'
+
+- name: Install Shinken WebUI2 dependencies
+  pip:
+    name: '{{ item.key }}'
+    version: '{{ item.value.version }}'
+    state: present
+  with_dict: '{{ shinken_module_webui2_dependencies }} '
+
+- name: Install shinken webui2
+  command: shinken install webui2
+  # become_user: shinken
+
+- name: Install shinken auth-cfg-password
+  command: shinken install auth-cfg-password
+  # become_user: shinken
+
+- name: Create webui2 configuration
+  template:
+    src: webui2.cfg.j2
+    dest: /etc/shinken/modules/webui2.cfg
+    # owner: shinken
+    # group: shinken
+    mode: 0644
+
+
+#- name: Create ui-pnp configuration
+#  template:
+#    src: ui-pnp.cfg.j2
+#    dest: /etc/shinken/modules/ui-pnp.cfg
+#    owner: shinken
+#    group: shinken
+#    mode: 0644
+#  #notify: restart_shinken
+#  with_items:
+#    - '{{ groups["brokers"] | first }}'
+- name: Enable Arbiter/Broker
+  service:
+    name: shinken-'{{ item }}'
+    state: started
+    enabled: yes
+  with_items:
+    - arbiter
+    - broker
+    - reactionner
